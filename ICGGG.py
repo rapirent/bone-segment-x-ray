@@ -6,10 +6,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
+import argparse
 import json, codecs
 
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(REPO_ROOT, 'X_Ray_Data_set/Knee2Dto3D_120XRrays/Knee2Dto3D_120XRrays')
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--picture', help='output picture')
+args = parser.parse_args()
 
 def detect_hand_and_fingers(img):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3),(1,1))
@@ -37,9 +42,8 @@ def detect_hand_silhoutte(img):
     return img
 
 print('IN ' + DATA_PATH)
-
 for dirpath, dirnames, filenames in os.walk(DATA_PATH):
-    for index ,filename in enumerate(filenames):
+    for filename in filenames:
         name, file_extension = os.path.splitext(os.path.join(dirpath,filename))
         if file_extension != '.jpg':
             continue
@@ -59,6 +63,11 @@ for dirpath, dirnames, filenames in os.walk(DATA_PATH):
         right_img = img[start_row:end_row , start_col:end_col]
         right_img2 = right_img.copy()
 
+        if args.verbosity:
+            cv2.imwrite(os.path.basename(dirpath) + '_' + filename + '_l_origin.jpg', left_img, 0)
+            cv2.imwrite(os.path.basename(dirpath) + '_' + filename + '_r_origin.jpg', right_img, 0)
+
+
         gray_l = detect_hand_and_fingers(left_img)
         gray_silhouette_l = detect_hand_silhoutte(left_img2)
         gray_r = detect_hand_and_fingers(right_img)
@@ -68,6 +77,7 @@ for dirpath, dirnames, filenames in os.walk(DATA_PATH):
         bones_r = gray_r - gray_silhouette_r
 
 
+
         _ , contours_l, hierarchy = cv2.findContours(bones_l, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         _ , contours_r, hierarchy = cv2.findContours(bones_r, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         contour_r = []
@@ -75,8 +85,13 @@ for dirpath, dirnames, filenames in os.walk(DATA_PATH):
         contour_r = [_ for sublist in [a.tolist() for a in contours_r] for item in sublist for _ in item]
         contour_l = [_ for sublist in [a.tolist() for a in contours_l] for item in sublist for _ in item]
 
-        json_file = str(index) + '_' + filename + '_l.json'
+        json_file =  os.path.basename(dirpath) + '_' + filename + '_l.json'
         print(json_file)
         json.dump(contour_l, codecs.open(json_file, 'w', encoding='utf-8'), sort_keys=True, indent=4)
-        json_file = str(index) + '_' + filename + '_r.json'
+        json_file =  os.path.basename(dirpath) + '_' + filename + '_r.json'
         json.dump(contour_r, codecs.open(json_file, 'w', encoding='utf-8'), sort_keys=True, indent=4)
+
+        if args.verbosity:
+            cv2.imwrite(os.path.basename(dirpath) + '_' + filename + '_l.jpg', bones_l, 0)
+            cv2.imwrite(os.path.basename(dirpath) + '_' + filename + '_r.jpg', bones_r, 0)
+
