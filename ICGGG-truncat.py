@@ -60,13 +60,11 @@ for dirpath, dirnames, filenames in os.walk(DATA_PATH):
         end_row, end_col = int(height*0.88), int(width*0.43)
         left_img = img[start_row:end_row , start_col:end_col]
         left_img2 = left_img.copy()
-        show_img(left_img)
 
         start_row, start_col = int(230), int(width*0.56)
         end_row, end_col = int(height*0.88), int(width*0.972)
         right_img = img[start_row:end_row , start_col:end_col]
         right_img2 = right_img.copy()
-        show_img(right_img)
 
         if args.picture:
             cv2.imwrite(os.path.basename(dirpath) + '_' + filename + '_l_origin.jpg', left_img)
